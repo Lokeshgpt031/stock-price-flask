@@ -1,0 +1,31 @@
+metaData=['currency',
+ 'symbol',
+ 'exchangeName',
+ 'fullExchangeName',
+ 'instrumentType',
+ 'firstTradeDate',
+ 'regularMarketTime',
+ 'hasPrePostMarketData',
+ 'gmtoffset',
+ 'timezone',
+ 'exchangeTimezoneName',
+ 'regularMarketPrice',
+ 'fiftyTwoWeekHigh',
+ 'fiftyTwoWeekLow',
+ 'regularMarketDayHigh',
+ 'regularMarketDayLow',
+ 'regularMarketVolume',
+ 'longName',
+ 'shortName',
+ 'chartPreviousClose',
+ 'previousClose',
+ 'scale',
+ 'priceHint',
+]
+perios=['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']
+options=[
+     'currentTradingPeriod',
+ 'dataGranularity',
+ 'range',
+ 'validRanges'
+]
