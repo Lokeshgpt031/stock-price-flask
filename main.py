@@ -15,7 +15,7 @@ def hello_world():
 
 @app.route("/api/stockprice/<name>")
 def get_stock_price(name):
-  ticker = yf.Ticker("MSFT")
+  ticker = yf.Ticker(name)
   res=ticker.history_metadata
   datares={}
   for i in metaData:
