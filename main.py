@@ -4,14 +4,19 @@ import os
 import json
 from constants import *
 
-from flask import Flask
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
 @app.route("/")
 def hello_world():
-  """Example Hello World route."""
-  return "Hello, World!"
+    """Example Hello World route."""
+    data = {
+        "Get Stock Price": "/api/stockprice/<name>",
+        "Get Stock History": "/api/history/<name>/<period>",
+        "Get Earning History": "/api/earninghistory/<name>"
+    }
+    return render_template('table.html', data=data)
 
 @app.route("/api/stockprice/<name>")
 def get_stock_price(name):
