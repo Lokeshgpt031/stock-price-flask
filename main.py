@@ -20,12 +20,15 @@ def hello_world():
 
 @app.route("/api/stockprice/<name>")
 def get_stock_price(name):
-  ticker = yf.Ticker(name)
-  res=ticker.history_metadata
-  datares={}
-  for i in metaData:
-    datares[i]=res[i]
-  return(json.dumps(datares))
+    ticker = yf.Ticker(name).history_metadata
+    datares = {}
+    for i in metaData:
+        try:  
+            datares[i] = ticker[i]
+        except:
+            datares[i] = ''  # Set to empty string if key is not found
+    return json.dumps(datares)
+
 
 @app.route("/api/history/<name>/<period>")
 def get_stock_history(name,period):
