@@ -30,15 +30,19 @@ def get_stock_price(name):
     return json.dumps(datares)
 
 @app.route("/api/history/<name>/<period>")
-def get_stock_history(name, period):
-    ticker = yf.Ticker(name).history(period)
-    return ticker.to_json()
+def get_stock_history(name,period):
+  ticker=yf.Ticker(name).history(period)
+  ticker.reset_index(inplace=True)
+  return ticker.to_json()
+
 
 @app.route("/api/earninghistory/<name>")
 def earning_history(name):
-    ticker = yf.Ticker(name).earnings_history.reset_index()
-    ticker.index.name = "Dates"
-    return ticker.to_json()
+  ticker=yf.Ticker(name).earnings_history
+  ticker.reset_index(inplace=True)
+  ticker.rename(columns={"index": "Dates"},inplace=True)
+
+  return (ticker.to_json())
 
 @app.route("/api/info/<name>")
 def get_ticker_info(name):
