@@ -43,8 +43,8 @@ def get_stock_history(name, period):
         interval = "1mo"
 
     ticker = yf.Ticker(name).history(period=period, interval=interval)
-    ticker.rename(columns={"index": "Date"}, inplace=True)
     ticker.reset_index(inplace=True)
+    ticker.rename(columns={"index": "Date"}, inplace=True)
     return ticker.to_json()
 
 
