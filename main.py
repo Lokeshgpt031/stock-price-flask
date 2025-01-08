@@ -30,10 +30,21 @@ def get_stock_price(name):
     return json.dumps(datares)
 
 @app.route("/api/history/<name>/<period>")
-def get_stock_history(name,period):
-  ticker=yf.Ticker(name).history(period)
-  ticker.reset_index(inplace=True)
-  return ticker.to_json()
+def get_stock_history(name, period):
+    if period == "1d":
+        interval = "5m"
+    elif period in ["5d", "1mo"]:
+        interval = "15m"
+    elif period in ["3mo", "6mo", "1y"]:
+        interval = "1d"
+    elif period in ["2y", "5y", "10y"]:
+        interval = "1wk"
+    else:
+        interval = "1mo"
+
+    ticker = yf.Ticker(name).history(period=period, interval=interval)
+    ticker.reset_index(inplace=True)
+    return ticker.to_json()
 
 
 @app.route("/api/earninghistory/<name>")
