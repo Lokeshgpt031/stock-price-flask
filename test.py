@@ -7,10 +7,10 @@ validRanges= ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', '
 
 msft = yf.Ticker("INFY.NS")
 
-# get all stock info
-meta=(msft.earnings_history.reset_index())
-meta.index = 'bar'
+from yfinance.ticker import Ticker
 
+# get all stock info
+meta=Ticker("INFY.NS").get_history_metadata()
 print(meta)
 
 metaData=['currency',
