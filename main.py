@@ -35,7 +35,7 @@ def get_stock_history(name, period):
         interval = "5m"
     elif period in ["5d", "1mo"]:
         interval = "15m"
-    elif period in ["3mo", "6mo", "1y"]:
+    elif period in ["3mo", "6mo", "1y","max","ytd"]:
         interval = "1d"
     elif period in ["2y", "5y", "10y"]:
         interval = "1wk"
