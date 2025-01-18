@@ -88,5 +88,3 @@ def indexList():
     except Exception as e:
         return "notok"
 
-
-print(combine_csv_files())

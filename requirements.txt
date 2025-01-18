@@ -1,9 +1,9 @@
 pip
 autopep8
-Flask==3.0.3
-gunicorn==22.0.0
-Werkzeug==3.0.3
+Flask
+gunicorn
+Werkzeug
 yfinance
 flask_cors
 vercel_blob
-dotenv
+python-dotenv
