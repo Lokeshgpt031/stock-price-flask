@@ -75,7 +75,6 @@ def get_ticker_info(name):
 
 @app.route("/api/instrumentList")
 def Update_Script_Master():
-    os.system('python Stocklist.py')
     return instrumentList()
 
 @app.route("/api/updateScriptMaster")
