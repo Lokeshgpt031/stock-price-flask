@@ -2,19 +2,24 @@ import yfinance as yf
 import os
 import json
 from constants import *
-
+from flask_cors import CORS
+from Stocklist import *
 from flask import Flask, render_template
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/")
 def hello_world():
     """Example Hello World route."""
     data = {
-        "Get Stock Price": "/api/stockprice/<name>",
-        "Get Stock History": "/api/history/<name>/<period>",
-        "Get Earning History": "/api/earninghistory/<name>",
-        "Get Ticker Info": "/api/info/<name>"
+        "Get Stock Price": "/api/stockprice/<name>", # get stock price of a ticker
+        "Get Stock History": "/api/history/<name>/<period>", #get stock price history in define period
+        "Get Earning History": "/api/earninghistory/<name>", #get the earning history of a ticker
+        "Get Ticker Info": "/api/info/<name>", #get the info of ticker
+        "Get Update Script Master": "/api/updateScriptMaster", # it update the list of all the script in the market
+        "Get Script Master": "/api/instrumentList", #it return the all script in the market
+        "Get Index List": "/api/indexList" #it return the list of all the index in the market
     }
     return render_template('table.html', data=data)
 
@@ -65,6 +70,22 @@ def get_ticker_info(name):
     ticker = yf.Ticker(name)
     info = ticker.info
     return json.dumps(info)
+
+@app.route("/api/instrumentList")
+def Update_Script_Master():
+    os.system('python Stocklist.py')
+    return instrumentList()
+
+@app.route("/api/updateScriptMaster")
+def Script_Master():
+    response= updateMaster()
+    if (response=='ok'):
+      return ("success", 200)
+    return ("error",400)
+
+@app.route("/api/indexList")
+def Index_List():
+    return indexList()
 
 if __name__ == "__main__":
     app.run()
