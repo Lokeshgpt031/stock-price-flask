@@ -52,6 +52,9 @@ def updateMaster():
 
         
 def indexList():
-    df = combine_csv_files("Source")
-    df=df[df['Instrument'].isin(['INDEX'])]
-    return df.to_json(orient='records')
+    try:
+        df = combine_csv_files("Source")
+        df=df[df['Instrument'].isin(['INDEX'])]
+        return df.to_json(orient='records')
+    except Exception as e:
+        return "notok"

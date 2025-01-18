@@ -85,7 +85,10 @@ def Script_Master():
 
 @app.route("/api/indexList")
 def Index_List():
-    return indexList()
+    res= indexList()
+    if (response=='notok'):
+      return ("error",400)
+    return (res,200)
 
 if __name__ == "__main__":
     app.run()
