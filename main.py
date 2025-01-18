@@ -1,4 +1,5 @@
 import yfinance as yf
+from markupsafe import Markup
 import os
 import json
 from constants import *
@@ -13,13 +14,14 @@ CORS(app)
 def hello_world():
     """Example Hello World route."""
     data = {
-        "Get Stock Price": "/api/stockprice/<name>", # get stock price of a ticker
-        "Get Stock History": "/api/history/<name>/<period>", #get stock price history in define period
-        "Get Earning History": "/api/earninghistory/<name>", #get the earning history of a ticker
-        "Get Ticker Info": "/api/info/<name>", #get the info of ticker
-        "Get Update Script Master": "/api/updateScriptMaster", # it update the list of all the script in the market
-        "Get Script Master": "/api/instrumentList", #it return the all script in the market
-        "Get Index List": "/api/indexList" #it return the list of all the index in the market
+        "Get Stock Price": Markup(f"<a href=\"/api/stockprice/<name>\">/api/stockprice/<name></a>"), # get stock price of a ticker
+        "Get Stock History": Markup(f"<a href=\"/api/history/<name>/<period>\">/api/history/<name>/<period></a>"), #get stock price history in define period
+        "Get Earning History": Markup(f"<a href=\"/api/earninghistory/<name>\">/api/earninghistory/<name></a>"), #get the earning history of a ticker
+        "Get Ticker Info": Markup(f"<a href=\"/api/info/<name>\">/api/info/<name></a>"), #get the info of ticker
+        "Get Update Script Master": Markup(f"<a href=\"/api/updateScriptMaster\">/api/updateScriptMaster</a>"), # it update the list of all the script in the market
+        "Get Script Master": Markup(f"<a href=\"/api/instrumentList\">/api/instrumentList</a>"), #it return the all script in the market
+        "Get Index List": Markup(f"<a href=\"/api/indexList\">/api/indexList</a>") #it return the list of all the index in the market
+    
     }
     return render_template('table.html', data=data)
 
@@ -86,7 +88,7 @@ def Script_Master():
 @app.route("/api/indexList")
 def Index_List():
     res= indexList()
-    if (response=='notok'):
+    if (res=='notok'):
       return ("error",400)
     return (res,200)
 
