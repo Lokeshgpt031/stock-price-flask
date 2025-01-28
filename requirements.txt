@@ -7,3 +7,4 @@ yfinance
 flask_cors
 vercel_blob
 python-dotenv
+nse

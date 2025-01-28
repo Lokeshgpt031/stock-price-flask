@@ -6,6 +6,13 @@ from constants import *
 from flask_cors import CORS
 from Stocklist import *
 from flask import Flask, render_template
+from nse import NSE
+from pathlib import Path
+from datetime import datetime, timedelta
+
+# Working directory
+DIR = Path(__file__).parent
+nse = NSE(download_folder=DIR)
 
 app = Flask(__name__)
 CORS(app)
@@ -90,6 +97,15 @@ def Index_List():
     if (res=='notok'):
       return ("error",400)
     return (res,200)
+
+
+@app.route("/api/announcement/<name>")
+def getAnnouncement(name):
+    from_date = datetime.now() - timedelta(days=30)
+    to_date = datetime.now()
+    # Assuming 'nse' is a predefined object that provides the 'announcements' function
+    return nse.announcements('equities', name, from_date=from_date, to_date=to_date)
+
 
 if __name__ == "__main__":
     app.run()
