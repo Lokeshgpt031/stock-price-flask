@@ -103,10 +103,13 @@ def Index_List():
 
 @app.route("/api/announcement/<name>")
 def getAnnouncement(name):
-    from_date = datetime.now() - timedelta(days=30)
-    to_date = datetime.now()
-    # Assuming 'nse' is a predefined object that provides the 'announcements' function
-    return json.dumps(nse.announcements('equities', name, from_date=from_date, to_date=to_date))
+    try:
+        from_date = datetime.now() - timedelta(days=30)
+        to_date = datetime.now()
+        # Assuming 'nse' is a predefined object that provides the 'announcements' function
+        return json.dumps(nse.announcements('equities', name, from_date=from_date, to_date=to_date))
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 
 if __name__ == "__main__":
