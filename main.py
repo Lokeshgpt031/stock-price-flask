@@ -27,8 +27,10 @@ def hello_world():
         "Get Ticker Info": Markup(f"<a href=\"/api/info/<name>\">/api/info/<name></a>"), #get the info of ticker
         "Get Update Script Master": Markup(f"<a href=\"/api/updateScriptMaster\">/api/updateScriptMaster</a>"), # it update the list of all the script in the market
         "Get Script Master": Markup(f"<a href=\"/api/instrumentList\">/api/instrumentList</a>"), #it return the all script in the market
-        "Get Index List": Markup(f"<a href=\"/api/indexList\">/api/indexList</a>") #it return the list of all the index in the market
-    
+        "Get Index List": Markup(f"<a href=\"/api/indexList\">/api/indexList</a>"), #it return the list of all the index in the market
+        "Get Announements": Markup(f"<a href=\"/api/announcement/<name>\">/api/announcement/<name></a>") #it return the list of all the index in the market
+
+        
     }
     return render_template('table.html', data=data)
 
@@ -104,7 +106,7 @@ def getAnnouncement(name):
     from_date = datetime.now() - timedelta(days=30)
     to_date = datetime.now()
     # Assuming 'nse' is a predefined object that provides the 'announcements' function
-    return nse.announcements('equities', name, from_date=from_date, to_date=to_date)
+    return json.dumps(nse.announcements('equities', name, from_date=from_date, to_date=to_date))
 
 
 if __name__ == "__main__":
