@@ -6,5 +6,3 @@ GET http://127.0.0.1:5000/api/stockprice/SILVERBEES.NS
 
 
 ###
-GET http://127.0.0.1:5000/api/announcement/INFY
-
