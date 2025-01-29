@@ -78,4 +78,6 @@ jobs:
         with:
           app-name: 'Stock-price-fast'
           slot-name: 'Production'
+          package: .
+          startup-command: 'gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app'
           
