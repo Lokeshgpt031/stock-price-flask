@@ -7,3 +7,7 @@ yfinance
 flask_cors
 vercel_blob
 python-dotenv
+fastapi
+uvicorn
+jinja2
+nse

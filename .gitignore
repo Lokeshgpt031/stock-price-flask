@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 .idx
 .vercel
+.env*.local
+nse_cookies.pkl
