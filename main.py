@@ -1,7 +1,7 @@
 import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 import yfinance as yf
 import json
 from constants import *
@@ -13,7 +13,19 @@ from datetime import datetime, timedelta
 # Working directory
 
 
-app = FastAPI()
+app = FastAPI(
+        title="My FastAPI App",
+        description="This is a sample FastAPI application with Swagger documentation",
+        version="1.0.0",
+        contact={
+            "name": "Stock Price Home",
+            "email": "lokeshgptmbnr@outlook.com",
+                                        },
+                license_info={
+                        "name": "MIT License",
+                            }
+             )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,34 +38,7 @@ app.add_middleware(
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
-    html_content = """
-    <html>
-        <head>
-            <title>Stock API Endpoints</title>
-            <style>
-                table { width: 50%; border-collapse: collapse; margin: 20px 0; }
-                th, td { border: 1px solid black; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-            </style>
-        </head>
-        <body>
-            <h2>Stock API Endpoints</h2>
-            <table>
-                <tr><th>API Name</th><th>Endpoint</th></tr>
-                <tr><td>Get Stock Price</td><td><a href="/api/stockprice/{name}">/api/stockprice/{name}</a></td></tr>
-                <tr><td>Get Stock History</td><td><a href="/api/history/{name}/{period}">/api/history/{name}/{period}</a></td></tr>
-                <tr><td>Get Earning History</td><td><a href="/api/earninghistory/{name}">/api/earninghistory/{name}</a></td></tr>
-                <tr><td>Get Ticker Info</td><td><a href="/api/info/{name}">/api/info/{name}</a></td></tr>
-                <tr><td>Get Update Script Master</td><td><a href="/api/updateScriptMaster">/api/updateScriptMaster</a></td></tr>
-                <tr><td>Get Script Master</td><td><a href="/api/instrumentList">/api/instrumentList</a></td></tr>
-                <tr><td>Get Index List</td><td><a href="/api/indexList">/api/indexList</a></td></tr>
-            </table>
-        </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
-
-
+    return RedirectResponse(url="/docs")
 @app.get("/api/stockprice/{name}")
 def get_stock_price(name: str):
     ticker = yf.Ticker(name).history_metadata
@@ -103,9 +88,19 @@ def index_list():
     res = indexList()
     return {"status": "success", "data": res} if res != "notok" else {"status": "error"}
 
-@app.get("/crash")
+@app.get("/nseMarket")
 def crash():
-    return {"status": "error"}
+    from nse import NSE
+    from pathlib import Path
+    # Working directory
+    DIR = Path(__file__).parent
+
+    nse = NSE(download_folder=DIR)
+
+    status = nse.status()
+
+    nse.exit() # close requests session
+    return status
 
 @app.get("/api/announcement/{name}")
 def get_announcement(name: str):
