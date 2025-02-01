@@ -2,8 +2,6 @@ import threading
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-import yfinance as yf
-import json
 from constants import *
 from Stocklist import *
 import uvicorn
@@ -11,16 +9,18 @@ from nse import NSE
 from pathlib import Path
 from datetime import datetime, timedelta
 # Working directory
+from FinanceClass import FinanceClass
 
+finance=FinanceClass()
 
-app = FastAPI(
+app = FastAPI( debug=True,
         title="My FastAPI App",
         description="This is a sample FastAPI application with Swagger documentation",
         version="1.0.0",
         contact={
             "name": "Stock Price Home",
             "email": "lokeshgptmbnr@outlook.com",
-                                        },
+                  },
                 license_info={
                         "name": "MIT License",
                             }
@@ -41,38 +41,23 @@ def read_root():
     return RedirectResponse(url="/docs")
 @app.get("/api/stockprice/{name}")
 def get_stock_price(name: str):
-    ticker = yf.Ticker(name).history_metadata
-    datares = {i: ticker.get(i, "") for i in metaData}
-    return datares
-
-@app.get("/api/history/{name}/{period}")
-def get_stock_history(name: str, period: str):
-    interval_map = {
-        "1d": "5m",
-        "5d": "15m", "1mo": "15m",
-        "3mo": "1d", "6mo": "1d", "1y": "1d", "max": "1d", "ytd": "1d",
-        "2y": "1wk", "5y": "1wk", "10y": "1wk"
-    }
-    interval = interval_map.get(period, "1mo")
-
-    ticker = yf.Ticker(name).history(period=period, interval=interval)
-    ticker.reset_index(inplace=True)
-    ticker.rename(columns={"index": "Date"}, inplace=True)
-    if "Datetime" in ticker.columns:
-        ticker["Date"] = ticker["Datetime"].dt.strftime("%Y-%m-%d %H:%M:%S")
-    
-    return ticker.to_dict(orient='records')
-
-@app.get("/api/earninghistory/{name}")
-def earning_history(name: str):
-    ticker = yf.Ticker(name).earnings_history
-    ticker.reset_index(inplace=True)
-    ticker.rename(columns={"index": "Dates"}, inplace=True)
-    return ticker.to_dict(orient='records')
+    return finance.get_stock_price(names=name.split(","))
 
 @app.get("/api/info/{name}")
 def get_ticker_info(name: str):
-    return yf.Ticker(name).info
+    return finance.get_ticker_info(names=name.split(","))
+
+@app.get("/api/history/{name}/{period}")
+def get_stock_history(name: str, period: str):
+    return finance.get_stock_history(name=name,period=period)
+
+@app.get("/api/annualEarning/{name}")
+def earning_history(name: str):
+    return finance.get_earning_report_annually()
+
+@app.get("/api/quarterlyEarning/{name}")
+def earning_history(name: str):
+    return finance.get_earning_report_annually()
 
 @app.get("/api/instrumentList")
 def update_script_master():
@@ -112,7 +97,6 @@ def get_announcement(name: str):
         return JSONResponse(content=nse.announcements('equities', name, from_date=from_date, to_date=to_date))
     except Exception as e:
         return JSONResponse(content={"status": "error", "data": {"error": str(e)}})
-
 
 
 if __name__ == "__main__":
