@@ -11,3 +11,6 @@ fastapi
 uvicorn
 jinja2
 nse
+dhanhq
+pandas
+NorenRestApi

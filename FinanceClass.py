@@ -1,84 +1,106 @@
 from datetime import datetime
 import yfinance as yf
 from constants import metaData
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 class FinanceClass:
+    """A utility class for fetching stock data using Yahoo Finance."""
 
     @staticmethod
-    def get_stock_price(names):
-        """Fetch stock metadata using Yahoo Finance."""
-        res=[]
-        try:
-            for stock in names:
-                ticker = yf.Ticker(stock).history_metadata
-                datares = {i: ticker.get(i, "") for i in metaData}
-                res.append(datares) if datares else res.append({}) 
-        except Exception:
-                pass  # Skip if an exception occurs
-        return res if len(res)>1 else res[0]
+    def get_stock_price(symbols):
+        """Fetch stock metadata for given symbols (list or str) using ThreadPoolExecutor for faster response."""
 
-    @staticmethod
-    def get_ticker_info(names: list):
-        """Retrieve general information about stock tickers."""
-        res = []
-        for stock in names:
+
+        if isinstance(symbols, str):
+            symbols = [symbols]
+        results = [{} for _ in symbols]
+
+        def fetch_metadata(idx, symbol):
             try:
-                ticker = yf.Ticker(stock)
-                data = ticker.info
-                res.append(data) if data else res.append({})
+                metadata = yf.Ticker(symbol).history_metadata
+                results[idx] = {k: metadata.get(k, "") for k in metaData}
             except Exception:
-                pass  # Skip if an exception occurs
-        return res[0] if len(res) == 1 else res  # Return single dict if only one valid stock
+                results[idx] = {}
 
+        with ThreadPoolExecutor() as executor:
+            futures = [
+                executor.submit(fetch_metadata, idx, symbol)
+                for idx, symbol in enumerate(symbols)
+            ]
+            for future in futures:
+                future.result()
 
-    
+        return results if len(results) != 1 else results[0]
+
     @staticmethod
-    def get_stock_history(name: str, period: str = "1mo"):
-        """Retrieve stock historical data for the given period."""
+    def get_ticker_info(symbols):
+        """Retrieve general information about stock tickers (list or str)."""
+        if isinstance(symbols, str):
+            symbols = [symbols]
+        results = []
+        for symbol in symbols:
+            try:
+                info = yf.Ticker(symbol).info
+                results.append(info if info else {})
+            except Exception:
+                results.append({})
+        return results[0] if len(results) == 1 else results
+
+    @staticmethod
+    def get_stock_history(symbol, period="1mo"):
+        """Retrieve historical stock data for a given period."""
         interval_map = {
-            "1d": "5m",
-            "5d": "15m", "1mo": "15m",
+            "1d": "5m", "5d": "15m", "1mo": "15m",
             "3mo": "1d", "6mo": "1d", "1y": "1d", "max": "1d", "ytd": "1d",
             "2y": "1wk", "5y": "1wk", "10y": "1wk"
         }
         interval = interval_map.get(period, "1mo")
-
-        ticker = yf.Ticker(name).history(period=period, interval=interval)
-        ticker.reset_index(inplace=True)
-        ticker.rename(columns={"index": "Date"}, inplace=True)
-        if "Datetime" in ticker.columns:
-            ticker["Date"] = ticker["Datetime"].dt.strftime("%Y-%m-%d %H:%M:%S")
-        
-        return ticker.to_dict(orient='records')
+        try:
+            df = yf.Ticker(symbol).history(period=period, interval=interval)
+            df.reset_index(inplace=True)
+            if "Datetime" in df.columns:
+                df["Date"] = df["Datetime"].dt.strftime("%Y-%m-%d %H:%M:%S")
+            elif "Date" not in df.columns:
+                df.rename(columns={"index": "Date"}, inplace=True)
+            return df.to_dict(orient="records")
+        except Exception:
+            return []
 
     @staticmethod
-    def get_earning_history(name: str):
+    def get_earning_history(symbol):
         """Get company's earnings history."""
-        ticker = yf.Ticker(name).earnings_history
-        ticker.reset_index(inplace=True)
-        ticker.rename(columns={"index": "Dates"}, inplace=True)
-        return ticker.to_dict(orient='records')
+        try:
+            df = yf.Ticker(symbol).earnings_history
+            df.reset_index(inplace=True)
+            df.rename(columns={"index": "Dates"}, inplace=True)
+            return df.to_dict(orient="records")
+        except Exception:
+            return []
 
-    
     @staticmethod
-    def get_earning_report_quarterly(name:str):
-        ticker=yf.Ticker(name)
-        return ticker.quarterly_income_stmt.to_dict()
-    
+    def get_earning_report_quarterly(symbol):
+        """Get quarterly income statement."""
+        try:
+            return yf.Ticker(symbol).quarterly_income_stmt.to_dict()
+        except Exception:
+            return {}
+
     @staticmethod
-    def get_earning_report_annually(name:str):
-        ticker=yf.Ticker(name)
-        return ticker.income_stmt.to_dict()
-    
+    def get_earning_report_annually(symbol):
+        """Get annual income statement."""
+        try:
+            return yf.Ticker(symbol).income_stmt.to_dict()
+        except Exception:
+            return {}
 
 # Example Usage:
-# finance = FinanceClass()
-# print(finance.get_ticker_info(["CAMS.NS",""]))
-# print("---------------")
-# print(finance.get_stock_history("INFY", "1y"))
-# print("---------------")
-# print(finance.get_ticker_info("INFY"))
-# print("---------------")
-# print(finance.get_earning_history("INFY"))
-# print("---------------")
-# print(finance.get_earning_report("INFY"))
+# if __name__ == "__main__":
+#     finance = FinanceClass()
+#     print(finance.get_stock_price(["INFY.NS", "ITC.NS"]))
+#     print("---------------")
+#     print(finance.get_ticker_info(["INFY"]))
+#     print("---------------")
+#     print(finance.get_earning_history("INFY"))
+#     print("---------------")
+#     print(finance.get_earning_report_annually("INFY"))

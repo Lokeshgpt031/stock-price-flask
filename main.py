@@ -5,7 +5,6 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from constants import *
 from Stocklist import *
 import uvicorn
-from nse import NSE
 from pathlib import Path
 from datetime import datetime, timedelta
 # Working directory
@@ -39,25 +38,26 @@ app.add_middleware(
 @app.get("/", response_class=HTMLResponse)
 def read_root():
     return RedirectResponse(url="/docs")
-@app.get("/api/stockprice/{name}")
+
+@app.get("/api/stockPrice/{name}")
 def get_stock_price(name: str):
-    return finance.get_stock_price(names=name.split(","))
+    return finance.get_stock_price(symbols=name.split(","))
 
 @app.get("/api/info/{name}")
 def get_ticker_info(name: str):
-    return finance.get_ticker_info(names=name.split(","))
+    return finance.get_ticker_info(symbols=name.split(","))
 
 @app.get("/api/history/{name}/{period}")
 def get_stock_history(name: str, period: str):
-    return finance.get_stock_history(name=name,period=period)
+    return finance.get_stock_history(symbol=name, period=period)
 
 @app.get("/api/annualEarning/{name}")
-def earning_history(name: str):
-    return finance.get_earning_report_annually()
+def annual_earning_history(name: str):
+    return finance.get_earning_report_annually(symbol=name)
 
 @app.get("/api/quarterlyEarning/{name}")
-def earning_history(name: str):
-    return finance.get_earning_report_annually()
+def quarterly_earning_history(name: str):
+    return finance.get_earning_report_quarterly(symbol=name)
 
 @app.get("/api/instrumentList")
 def update_script_master():
@@ -87,17 +87,48 @@ def crash():
     nse.exit() # close requests session
     return status
 
+from concurrent.futures import ThreadPoolExecutor
+
 @app.get("/api/announcement/{name}")
 def get_announcement(name: str):
     try:
+        from nse import NSE
+
         DIR = Path(__file__).parent
         nse = NSE(download_folder=DIR)
-        from_date = datetime.now() - timedelta(days=1)
+        from_date = datetime.now() - timedelta(days=7)
         to_date = datetime.now()
-        return JSONResponse(content=nse.announcements('equities', name, from_date=from_date, to_date=to_date))
+        names = [n.strip() for n in name.split(",") if n.strip()]
+
+        def fetch_announcement(symbol):
+            try:
+                data = nse.announcements('equities', symbol, from_date=from_date, to_date=to_date)
+                return {"symbol": symbol, "data": data,"TimeGenerated":datetime.strptime(data[0].get('sort_date'), "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")} if data!=[] else {"symbol": symbol, "data": data}
+            except Exception as e:
+                return {"symbol": symbol, "error": str(e),"TimeGenerated":datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+        with ThreadPoolExecutor() as executor:
+            results = list(executor.map(fetch_announcement, names))
+
+        nse.exit()
+        return JSONResponse(content={
+            "status": "success",
+            "data": results,
+            "TimeGenerated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        })
     except Exception as e:
         return JSONResponse(content={"status": "error", "data": {"error": str(e)}})
 
+
+# @app.get("/api/holdings")
+@app.get("/api/holdings", response_class=JSONResponse(content={"status": "success", "data": [], "TimeGenerated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}))
+def get_holdings():
+    import brokers
+    try:
+        holdings = brokers.broker_holding()
+        return JSONResponse(content={"status": "success", "data": holdings, "TimeGenerated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+    except Exception as e:
+        return JSONResponse(content={"status": "error", "data": {"error": str(e)}})
 
 if __name__ == "__main__":
     import uvicorn
