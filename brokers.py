@@ -6,6 +6,9 @@ import pandas as pd
 from dhanhq import dhanhq
 import logging
 import pyotp
+from dotenv import dotenv_values
+config = dotenv_values(".env") 
+
 import dotenv
 def broker_holding():
 #enable dbug to see request and responses
@@ -14,16 +17,16 @@ def broker_holding():
     #you can use pyotp library to generate the 2FA code
 
     #credentials
-    secret= dotenv.get_key('.env.local', 'SECRET_TOTP')
+    secret= config['SECRET_TOTP']
     totp = pyotp.TOTP(secret)
-    user        = dotenv.get_key('.env.local', 'USER')
-    u_pwd       = dotenv.get_key('.env.local', 'U_PWD')
+    user        = config['USER']
+    u_pwd       = config['U_PWD']
     factor2     = totp.now() # => '492039'
-    vc          = dotenv.get_key('.env.local', 'VC')
-    app_key     = dotenv.get_key('.env.local', 'APP_KEY')
-    imei        = dotenv.get_key('.env.local', 'IMET')
-    access_token = dotenv.get_key('.env.local', 'DHAN_ACCESS_TOKEN')
-    client_id=dotenv.get_key('.env.local', 'CLIENT_ID')
+    vc          = config['VC']
+    app_key     = config['APP_KEY']
+    imei        = config['IMET']
+    access_token = config['DHAN_ACCESS_TOKEN']
+    client_id=config['CLIENT_ID']
     #%%
     dhan = dhanhq(client_id="TGLO12737J",access_token=access_token)
     api = NorenApi( host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/') 
@@ -89,4 +92,4 @@ def broker_holding():
     # return json.loads(a.to_json(orient='records'))
 
 
-broker_holding()
+# print(broker_holding())

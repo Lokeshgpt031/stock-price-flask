@@ -130,6 +130,13 @@ def get_holdings():
     except Exception as e:
         return JSONResponse(content={"status": "error", "data": {"error": str(e)}})
 
+
+@app.get("/getEnv")
+def getEnv():
+    from dotenv import dotenv_values
+    config = dotenv_values(".env") 
+    return JSONResponse(content=config)
+
 if __name__ == "__main__":
     import uvicorn
     def run_server():
