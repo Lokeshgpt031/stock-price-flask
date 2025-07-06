@@ -6,8 +6,12 @@ import pandas as pd
 from dhanhq import dhanhq
 import logging
 import pyotp
-from dotenv import dotenv_values
-config = dotenv_values(".env") 
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from the .env file
+load_dotenv()
+
 
 import dotenv
 def broker_holding():
@@ -17,16 +21,16 @@ def broker_holding():
     #you can use pyotp library to generate the 2FA code
 
     #credentials
-    secret= config['SECRET_TOTP']
+    secret= os.getenv('SECRET_TOTP')
     totp = pyotp.TOTP(secret)
-    user        = config['USER']
-    u_pwd       = config['U_PWD']
+    user        = os.getenv('USER')
+    u_pwd       = os.getenv('U_PWD')
     factor2     = totp.now() # => '492039'
-    vc          = config['VC']
-    app_key     = config['APP_KEY']
-    imei        = config['IMET']
-    access_token = config['DHAN_ACCESS_TOKEN']
-    client_id=config['CLIENT_ID']
+    vc          = os.getenv('VC')
+    app_key     = os.getenv('APP_KEY')
+    imei        = os.getenv('IMET')
+    access_token = os.getenv('DHAN_ACCESS_TOKEN')
+    client_id=os.getenv('CLIENT_ID')
     #%%
     dhan = dhanhq(client_id="TGLO12737J",access_token=access_token)
     api = NorenApi( host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/') 
