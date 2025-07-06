@@ -1,7 +1,13 @@
-
-
-
-
+from dotenv import load_dotenv
+load_dotenv()
+import os
+container_name = "ai-test"
+storageAccount=os.getenv("storageAccount")
+endpoint = "https://360documents.cognitiveservices.azure.com/"
+storeAccountkey= os.getenv('storeAccountkey')
+MODEL= os.getenv('MODEL')
+sassToken= os.getenv('sassToken')
+StorageAccountConnectionString= os.getenv('StorageAccountConnectionString')
 #%%
 import requests
 def downloadPDFFromUrl(url:str):
@@ -54,7 +60,7 @@ def analyze_read(fileName:str):
     try:
         formUrl =f"https://{storageAccount}.blob.core.windows.net/{container_name}/{fileName}?{sassToken}"
         document_intelligence_client  = DocumentIntelligenceClient(
-            endpoint=endpoint, credential=AzureKeyCredential(key)
+            endpoint=endpoint, credential=AzureKeyCredential(storeAccountkey)
         )
         
         poller = document_intelligence_client.begin_analyze_document(
@@ -101,4 +107,4 @@ def fullflow(url:str):
 urlToDwnd="https://nsearchives.nseindia.com/corporate/BSOFT_04072025161239_SEIntimationAGMRD.pdf"
 
 
-# print(fullflow(urlToDwnd))
+print(fullflow(urlToDwnd))
