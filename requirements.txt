@@ -15,3 +15,7 @@ dhanhq
 pandas
 NorenRestApi
 pyotp
+azure-storage-blob
+azure-identity
+azure-ai-documentintelligence
+groq

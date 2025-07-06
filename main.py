@@ -130,7 +130,10 @@ def get_holdings():
     except Exception as e:
         return JSONResponse(content={"status": "error", "data": {"error": str(e)}})
 
-
+@app.get("/api/ai/SummarizeDocument")
+def SummarizeDocument(url:str):
+    from AI.pdfToText import fullflow
+    return fullflow(url=url)
 
 
 if __name__ == "__main__":
