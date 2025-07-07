@@ -141,7 +141,7 @@ def fullflow(url:str):
         return summarize_with_groq(context)
     return "From Code: There is no text to summarize! Please provide a PDF document or text, and I'll be happy to assist you with a concise summary "
 
-urlToDwnd="https://nsearchives.nseindia.com/corporate/BSOFT_04072025161239_SEIntimationAGMRD.pdf"
+# urlToDwnd="https://nsearchives.nseindia.com/corporate/BSOFT_04072025161239_SEIntimationAGMRD.pdf"
 
 
-print(fullflow(urlToDwnd))
+# print(fullflow(urlToDwnd))
