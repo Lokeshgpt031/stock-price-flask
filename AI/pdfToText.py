@@ -4,10 +4,11 @@ import os
 container_name = "ai-test"
 storageAccount=os.getenv("storageAccount")
 endpoint = "https://360documents.cognitiveservices.azure.com/"
-storeAccountkey= os.getenv('storeAccountkey')
+AIDocumentKey= os.getenv('AIDocumentKey')
 MODEL= os.getenv('MODEL')
-sassToken= os.getenv('sassToken')
+# sassToken= os.getenv('sassToken')
 StorageAccountConnectionString= os.getenv('StorageAccountConnectionString')
+
 #%%
 import requests
 def downloadPDFFromUrl(url:str):
@@ -36,17 +37,32 @@ def downloadPDFFromUrl(url:str):
 def uploadToCloud(fileName:str):        
     from azure.storage.blob import BlobServiceClient
     from azure.core.exceptions import ResourceExistsError
+    from azure.storage.blob import BlobServiceClient, BlobSasPermissions, generate_blob_sas
+    from datetime import datetime, timedelta, timezone
 
+    
     blob_service_client = BlobServiceClient.from_connection_string(StorageAccountConnectionString)
 
     blob_client = blob_service_client.get_blob_client(container=container_name, blob=fileName)
+    # Generate SAS token
+    sas_token = generate_blob_sas(
+        account_name=blob_service_client.account_name,
+        account_key=blob_service_client.credential.account_key,
+        container_name=container_name,
+        blob_name=fileName,
+        permission=BlobSasPermissions(read=True, write=True),
+
+        start = datetime.now(timezone.utc),
+        expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    )
+
     try:
         with open(file=fileName, mode="rb") as data:
             blob_client.upload_blob(data)
-        return fileName
+        return f"{blob_client.url}?{sas_token}"
     except ResourceExistsError:
         print(f"Blob '{blob_client.blob_name}' already exists.")
-        return fileName
+        return f"{blob_client.url}?{sas_token}"
     except Exception as e:
         print(f"Unexpected error occurred: {e}")
         return None
@@ -58,13 +74,12 @@ def analyze_read(fileName:str):
     # sample document
     from azure.core.exceptions import HttpResponseError
     try:
-        formUrl =f"https://{storageAccount}.blob.core.windows.net/{container_name}/{fileName}?{sassToken}"
         document_intelligence_client  = DocumentIntelligenceClient(
-            endpoint=endpoint, credential=AzureKeyCredential(storeAccountkey)
+            endpoint=endpoint, credential=AzureKeyCredential(AIDocumentKey)
         )
         
         poller = document_intelligence_client.begin_analyze_document(
-            "prebuilt-read", AnalyzeDocumentRequest(url_source=formUrl)
+            "prebuilt-read", AnalyzeDocumentRequest(url_source=fileName)
         )
         result = poller.result()
 
@@ -87,10 +102,23 @@ def summarize_with_groq(text, model=MODEL):
     
     response = client.chat.completions.create(
         model=model,
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant that summarizes scanned PDF documents."},
-            {"role": "user", "content": prompt}
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a helpful financial assistant. "
+                    "Your task is to read the provided financial news, earnings reports, or company statements. "
+                    "From the given text, summarize the key factors that are likely to impact the company's performance — "
+                    "positively or negatively. Focus on revenue trends, market developments, regulatory changes, leadership updates, "
+                    "product launches, risks, and competition."
+                )
+            },
+            {
+                "role": "user",
+                "content": prompt  # This should be the financial article or paragraph
+            }
         ]
+
     )
     return response.choices[0].message.content
 
@@ -98,9 +126,18 @@ def summarize_with_groq(text, model=MODEL):
 
 def fullflow(url:str):
     fileName=downloadPDFFromUrl(url)
+    file_path=fileName
     fileName=uploadToCloud(fileName=fileName)
     context=analyze_read(fileName=fileName)
     if(context):
+        import os
+        # Check if the file exists
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            print("File deleted successfully.")
+        else:
+            print("File does not exist.")
+
         return summarize_with_groq(context)
     return "From Code: There is no text to summarize! Please provide a PDF document or text, and I'll be happy to assist you with a concise summary "
 
