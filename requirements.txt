@@ -19,3 +19,5 @@ azure-storage-blob
 azure-identity
 azure-ai-documentintelligence
 groq
+agno
+duckduckgo-search
