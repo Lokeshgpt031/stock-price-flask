@@ -95,34 +95,54 @@ def analyze_read(fileName:str):
 
 
 # %%
-import groq
+from agno.agent import Agent, RunResponse
+from agno.models.groq import Groq
+from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.tools.yfinance import YFinanceTools
+# Initialize the agent with an LLM via Groq and DuckDuckGoTools
+from agno.utils.pprint import pprint_run_response
+
+from agno.agent import Agent, RunResponse
+from agno.models.groq import Groq
+from agno.tools.duckduckgo import DuckDuckGoTools
+from agno.utils.pprint import pprint_run_response
+
+# Define your model ID, e.g., "mixtral-8x7b-32768"
+# MODEL = "mixtral-8x7b-32768"  # You can change this to whatever model you're using
+
 def summarize_with_groq(text, model=MODEL):
-    client = groq.Groq()
-    prompt = f"Summarize the following text:\n\n{text}"
-    
-    response = client.chat.completions.create(
-        model=model,
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a helpful financial assistant. "
-                    "Your task is to read the provided financial news, earnings reports, or company statements. "
-                    "From the given text, summarize the key factors that are likely to impact the company's performance — "
-                    "positively or negatively. Focus on revenue trends, market developments, regulatory changes, leadership updates, "
-                    "product launches, risks, and competition."
-                )
-            },
-            {
-                "role": "user",
-                "content": prompt  # This should be the financial article or paragraph
-            }
-        ]
-
+    web_agent = Agent(
+        name="Web Agent",
+        role="You are an enthusiastic Financial Analyst and Good Storytelling Reporter",
+        model=Groq(id=model),
+        tools=[DuckDuckGoTools()],  # Add other tools like YFinanceTools if needed
+        show_tool_calls=True,
+        instructions="Always include sources",
+        markdown=True
     )
-    return response.choices[0].message.content
+    finance_agent = Agent(
+        name="Finance Agent",
+        role="Get financial data",
+        model=Groq(id=model),
+        tools=[YFinanceTools(stock_price=True, analyst_recommendations=True, company_info=True)],
+        instructions="Use tables to display data",
+        markdown=True,
+    )
+    agent_team = Agent(
+        team=[web_agent, finance_agent],
+        model=Groq(id=model),  # You can use a different model for the team leader agent
+        instructions=["Always include sources", "Use tables to display data"],
+        # show_tool_calls=True,  # Uncomment to see tool calls in the response
+        markdown=True,
+    )
+
+    # Run the agent with the provided text
+    response: RunResponse = agent_team.run(text)
+    # Return markdown-formatted output
+    return response.content
 
 
+# print(summarize_with_groq(analyze_read("BHARTIARTL_11072025151943_AGM2025_Pread.pdf")))
 
 def fullflow(url:str):
     fileName=downloadPDFFromUrl(url)

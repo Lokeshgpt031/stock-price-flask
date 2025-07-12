@@ -96,7 +96,7 @@ def get_announcement(name: str):
 
         DIR = Path(__file__).parent
         nse = NSE(download_folder=DIR)
-        from_date = datetime.now() - timedelta(days=7)
+        from_date = datetime.now() - timedelta(days=1)
         to_date = datetime.now()
         names = [n.strip() for n in name.split(",") if n.strip()]
 

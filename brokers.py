@@ -32,7 +32,7 @@ def broker_holding():
     access_token = os.getenv('DHAN_ACCESS_TOKEN')
     client_id=os.getenv('CLIENT_ID')
     #%%
-    dhan = dhanhq(client_id="TGLO12737J",access_token=access_token)
+    dhan = dhanhq(client_id=client_id,access_token=access_token)
     api = NorenApi( host='https://api.shoonya.com/NorenWClientTP/', websocket='wss://api.shoonya.com/NorenWSTP/') 
 
     totp.now() # => '492039'
@@ -96,4 +96,4 @@ def broker_holding():
     # return json.loads(a.to_json(orient='records'))
 
 
-# print(broker_holding())
+# s
