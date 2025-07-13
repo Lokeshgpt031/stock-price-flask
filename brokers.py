@@ -8,6 +8,9 @@ import logging
 import pyotp
 from dotenv import load_dotenv
 import os
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import yfinance as yf
+from constants import metaData
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -83,26 +86,37 @@ def broker_holding():
         axis=1
     )
     
-    return json.loads(df.to_json(orient='records'))
+    
+    # Fetch function
+    def fetch_live_data(row):
+        quote = row['quote']
+        try:
+            ticker = yf.Ticker(quote)
+            info = ticker.history_metadata
+            result = {k: info.get(k, "") for k in metaData}
+            sector = ticker.info.get('sector', "")
+            return (quote, result, sector)
+        except Exception as e:
+            return (quote, {"error": str(e)}, "")
 
-    # %%
-    # from FinanceClass import FinanceClass
-    # finance = FinanceClass()
-    # # df.quote.to_list()
-    # output=finance.get_stock_price(df.quote.to_list())
+    # Use ThreadPoolExecutor
+    live_data_map = {}
+    sector_map = {}
 
-    # res=pd.DataFrame(output)
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        futures = {executor.submit(fetch_live_data, row): row['quote'] for _, row in df.iterrows()}
+        for future in as_completed(futures):
+            quote, data, sector = future.result()
+            live_data_map[quote] = data
+            sector_map[quote] = sector
 
-    # # %%
-    # cols=['symbol','regularMarketPrice', 'fiftyTwoWeekHigh', 'fiftyTwoWeekLow', 'previousClose',
-    #     'regularMarketDayHigh', 'regularMarketDayLow', 'regularMarketVolume',
-    #     'longName', 'shortName']
+    # Map both `liveData` and `sector` back to the DataFrame
+    df['liveData'] = df['quote'].map(live_data_map)
+    df['sector'] = df['quote'].map(sector_map)
+    df['sector'] = df['sector'].replace('', pd.NA).fillna('unknown')
+
+    res=json.loads(df.to_json(orient='records'))
+    return res
 
 
-    # # %%
-    # a = df.merge(res[cols], left_on='quote', right_on='symbol', how='inner')
-
-    # return json.loads(a.to_json(orient='records'))
-
-
-# s
+# print(broker_holding())

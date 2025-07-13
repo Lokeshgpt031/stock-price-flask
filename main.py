@@ -1,7 +1,8 @@
 import threading
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.security import APIKeyHeader
 from constants import *
 from Stocklist import *
 import uvicorn
@@ -10,20 +11,52 @@ from datetime import datetime, timedelta
 # Working directory
 from FinanceClass import FinanceClass
 
+from dotenv import load_dotenv
+import os
+load_dotenv()
+
+ENV = os.getenv("ENV", "development")  # Default to 'development'
+print(ENV)
 finance=FinanceClass()
 
-app = FastAPI( debug=True,
-        title="My FastAPI App",
-        description="This is a sample FastAPI application with Swagger documentation",
-        version="1.0.0",
-        contact={
-            "name": "Stock Price Home",
-            "email": "lokeshgptmbnr@outlook.com",
-                  },
-                license_info={
-                        "name": "MIT License",
-                            }
-             )
+app = FastAPI(
+    debug=True,
+    title="My FastAPI App",
+    description="This is a sample FastAPI application with Swagger documentation",
+    version="1.0.0",
+    contact={
+        "name": "Stock Price Home",
+        "email": "lokeshgptmbnr@outlook.com",
+    },
+    license_info={
+        "name": "MIT License",
+    }
+)
+
+
+
+
+
+API_KEY = os.getenv("API_KEY", "development")  # Replace with your actual key
+API_KEY_NAME = "x-api-key"
+
+api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
+
+
+
+@app.middleware("http")
+async def enforce_api_key(request: Request, call_next):
+    for i in request.headers.items():
+        print(i)
+    allowed_paths = ["/docs", "/openapi.json", "/redoc"]
+    if request.url.path in allowed_paths:
+        return await call_next(request)
+    
+    api_key = request.headers.get(API_KEY_NAME)
+    if api_key != API_KEY and ENV == 'production':
+        return JSONResponse(status_code=403, content={"detail": "Invalid or missing API Key"})
+    
+    return await call_next(request)
 
 
 app.add_middleware(
@@ -33,7 +66,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -134,6 +166,11 @@ def get_holdings():
 def SummarizeDocument(url:str):
     from AI.pdfToText import fullflow
     return fullflow(url=url)
+
+
+
+
+
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ from datetime import datetime
 import yfinance as yf
 from constants import metaData
 import threading
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 class FinanceClass:
     """A utility class for fetching stock data using Yahoo Finance."""
@@ -23,7 +23,7 @@ class FinanceClass:
             except Exception:
                 results[idx] = {}
 
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             futures = [
                 executor.submit(fetch_metadata, idx, symbol)
                 for idx, symbol in enumerate(symbols)
@@ -33,19 +33,29 @@ class FinanceClass:
 
         return results if len(results) != 1 else results[0]
 
+
     @staticmethod
     def get_ticker_info(symbols):
-        """Retrieve general information about stock tickers (list or str)."""
+        """Retrieve general information about stock tickers (list or str) using threading."""
         if isinstance(symbols, str):
             symbols = [symbols]
-        results = []
-        for symbol in symbols:
+
+        def fetch_info(symbol):
             try:
-                info = yf.Ticker(symbol).info
-                results.append(info if info else {})
+                return symbol, yf.Ticker(symbol).info
             except Exception:
-                results.append({})
-        return results[0] if len(results) == 1 else results
+                return symbol, {}
+
+        results = {}
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = {executor.submit(fetch_info, symbol): symbol for symbol in symbols}
+            for future in as_completed(futures):
+                symbol, info = future.result()
+                results[symbol] = info if info else {}
+
+        # Return single dict if one symbol, else dict of all
+        return results[symbols[0]] if len(symbols) == 1 else results
+
 
     @staticmethod
     def get_stock_history(symbol, period="1mo"):
