@@ -46,8 +46,6 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 @app.middleware("http")
 async def enforce_api_key(request: Request, call_next):
-    for i in request.headers.items():
-        print(i)
     allowed_paths = ["/docs", "/openapi.json", "/redoc"]
     if request.url.path in allowed_paths:
         return await call_next(request)
