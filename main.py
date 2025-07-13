@@ -90,13 +90,13 @@ def crash():
 from concurrent.futures import ThreadPoolExecutor
 
 @app.get("/api/announcement/{name}")
-def get_announcement(name: str):
+def get_announcement(name: str, days: int = 1):
     try:
         from nse import NSE
 
         DIR = Path(__file__).parent
         nse = NSE(download_folder=DIR)
-        from_date = datetime.now() - timedelta(days=1)
+        from_date = datetime.now() - timedelta(days=days)
         to_date = datetime.now()
         names = [n.strip() for n in name.split(",") if n.strip()]
 

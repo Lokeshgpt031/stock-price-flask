@@ -73,7 +73,16 @@ def broker_holding():
 
 
     # %%
-    df['quote'] = df.apply(lambda row: f"{row['tradingSymbol']}.NS" if row['exchange'] in ['NSE', 'ALL'] else f"{row['tradingSymbol']}.BO", axis=1)
+        
+    BOList = ['INDIGRID']
+
+    df['quote'] = df.apply(
+        lambda row: f"{row['tradingSymbol']}.NS" 
+        if row['exchange'] in ['NSE', 'ALL'] and row['tradingSymbol'] not in BOList 
+        else f"{row['tradingSymbol']}.BO",
+        axis=1
+    )
+    
     return json.loads(df.to_json(orient='records'))
 
     # %%
